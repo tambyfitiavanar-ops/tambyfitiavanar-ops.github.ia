@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Y-Turnover Management – Suivi CA & Bénéfices" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <title>Y-Turnover Management</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9;
+      --muted: #94a3b8; --primary: #3b82f6; --primary-hover: #2563eb;
+      --success: #22c55e; --danger: #ef4444; --input-bg: #0f172a; --calc: #94a3b8;
+      --folder: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      padding: 12px; line-height: 1.4; -webkit-tap-highlight-color: transparent;
+    }
+    h1, h2 { font-weight: 600; }
+    .hidden { display: none !important; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 12px;
+    }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+    input[type="text"], input[type="number"], input[type="date"], select {
+      width: 100%; padding: 11px 12px; background: var(--input-bg);
+      border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+      font-size: 15px; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--primary); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 11px 16px; border: none; border-radius: 8px; font-size: 14px;
+      font-weight: 500; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 7px 11px; font-size: 13px; }
+    .btn-block { width: 100%; }
+    .btn-icon {
+      background: transparent; border: none; color: var(--muted); font-size: 18px;
+      padding: 6px 8px; cursor: pointer; border-radius: 6px; line-height: 1;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.08); }
+    .btn-icon.danger:hover { color: var(--danger); background: rgba(239,68,68,0.15); }
+    .btn-icon:disabled { opacity: 0.35; pointer-events: none; }
+    .help { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+    .help code {
+      background: #0f172a; padding: 1px 5px; border-radius: 3px;
+      font-family: ui-monospace, monospace; font-size: 11px;
+    }
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--success); color: #fff; padding: 12px 20px; border-radius: 10px;
+      font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      max-width: 90%; text-align: center;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--danger); }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 150;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px; width: 100%; max-width: 360px; text-align: center;
+    }
+    .modal h3 { margin-bottom: 10px; font-size: 17px; }
+    .modal p { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+    .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .modal-actions .btn { flex: 1; min-width: 100px; }
+    .modal input { margin-bottom: 14px; text-align: left; }
+
+    /* HOME */
+    #home-screen { max-width: 520px; margin: 0 auto; }
+    .home-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .home-header h1 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    .home-header img { width: 32px; height: 32px; border-radius: 8px; }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+      font-size: 13px; color: var(--muted); margin-bottom: 12px;
+    }
+    .breadcrumb span { cursor: pointer; }
+    .breadcrumb span:hover { color: var(--primary); }
+    .breadcrumb .sep { color: var(--border); cursor: default; }
+    .item-list { margin-bottom: 14px; }
+    .item {
+      display: flex; align-items: center; gap: 12px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px;
+      margin-bottom: 9px; cursor: pointer;
+    }
+    .item:active { background: #243044; }
+    .item .icon { font-size: 24px; width: 36px; text-align: center; flex-shrink: 0; }
+    .item.folder .icon { color: var(--folder); }
+    .item .info { flex: 1; min-width: 0; }
+    .item .name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .item .actions { display: flex; gap: 2px; }
+    .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .home-actions { display: flex; gap: 8px; }
+    .home-actions .btn { flex: 1; }
+
+    /* CONFIG */
+    #config-screen { max-width: 560px; margin: 0 auto; padding-bottom: 40px; }
+    .col-config {
+      background: #0f172a; border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; margin-bottom: 10px; position: relative;
+    }
+    .col-config .row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .col-config .row > * { flex: 1; min-width: 110px; }
+    .col-config .formula-row { display: none; }
+    .col-config.calculated .formula-row { display: block; }
+    .col-config .del-col { position: absolute; top: 8px; right: 8px; }
+
+    /* APP TABLE */
+    #app-screen { max-width: 100%; }
+    .app-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+    }
+    .app-header h1 { font-size: 16px; max-width: 48%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toolbar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+    .toolbar .btn-icon { font-size: 20px; padding: 6px 9px; }
+    .table-wrapper {
+      overflow-x: auto; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--card); -webkit-overflow-scrolling: touch;
+      max-height: calc(100vh - 200px);
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    th, td {
+      padding: 7px 5px; border-bottom: 1px solid var(--border);
+      text-align: right; white-space: nowrap; font-size: 13px;
+    }
+    th {
+      background: #1e293b; position: sticky; top: 0; z-index: 3;
+      font-weight: 600; color: var(--muted); text-align: center;
+      font-size: 11px; padding: 10px 5px; line-height: 1.3;
+    }
+    th:first-child, td:first-child {
+      text-align: center; position: sticky; left: 0; z-index: 2; min-width: 108px;
+    }
+    th:first-child { z-index: 4; background: #1e293b; }
+    td:first-child { background: var(--card); font-weight: 500; }
+    tr:nth-child(even) td { background: #1a2436; }
+    tr:nth-child(even) td:first-child { background: #1a2436; }
+    tr:hover td { background: #243044; }
+    tr:hover td:first-child { background: #243044; }
+    td input[type="text"], td input[type="date"], td textarea {
+      width: 100px; padding: 7px 5px; background: transparent;
+      border: 1px solid transparent; border-radius: 5px; color: var(--text);
+      text-align: right; font-size: 13px; outline: none;
+    }
+    td input[type="date"] { width: 118px; text-align: center; }
+    td input:focus, td textarea:focus { border-color: var(--primary); background: var(--input-bg); }
+    td textarea {
+      width: 120px; min-height: 30px; max-height: 130px; resize: vertical;
+      padding: 6px 5px; background: transparent; border: 1px solid transparent;
+      border-radius: 5px; color: var(--text); text-align: right; font-size: 12px;
+      outline: none; font-family: inherit; line-height: 1.45; overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    td textarea:focus {
+      border-color: var(--primary);
+      background: var(--input-bg);
+      min-height: 54px;
+    }
+    td .multi-wrap {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    }
+    td .multi-sum {
+      font-size: 10px; color: var(--primary); font-weight: 600;
+      opacity: 0.85; padding-right: 4px;
+    }
+    td.calculated {
+      color: var(--calc); font-style: italic; padding-right: 10px;
+      user-select: text; -webkit-user-select: text;
+    }
+    td.calculated.editable-first { color: var(--text); font-style: normal; }
+    .badge {
+      display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 4px;
+      background: #334155; color: #94a3b8; margin-left: 3px;
+    }
+    .status { font-size: 12px; color: var(--muted); margin-top: 10px; text-align: center; }
+    .add-row-bar { margin-top: 12px; }
+    .trash-item {
+      display: flex; align-items: center; gap: 10px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px;
+    }
+    .trash-item .info { flex: 1; }
+    .trash-item .name { font-weight: 500; }
+    .trash-item .meta { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <!-- HOME -->
+  <div id="home-screen">
+    <div class="home-header">
+      <h1><img src="icon-192.png" alt="" /> Y-Turnover</h1>
+      <button class="btn btn-secondary btn-sm" onclick="showTrash()">🗑 Corbeille</button>
+    </div>
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div id="item-list" class="item-list"></div>
+    <div class="home-actions">
+      <button class="btn btn-secondary" onclick="createFolder()">📁 Dossier</button>
+      <button class="btn btn-primary" onclick="startNewActivity()">+ Activité</button>
+    </div>
+  </div>
+
+  <!-- TRASH -->
+  <div id="trash-screen" class="hidden">
+    <div class="home-header">
+      <h1>🗑 Corbeille</h1>
+      <button class="btn btn-secondary btn-sm" onclick="showHome()">← Retour</button>
+    </div>
+    <div id="trash-list"></div>
+    <p class="help" style="text-align:center;margin-top:16px;">Restaure ou supprime définitivement.</p>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="config-screen" class="hidden">
+    <h1 style="text-align:center;margin-bottom:16px;font-size:20px;">⚙️ Configuration</h1>
+    <div class="card">
+      <label>Nom de l'activité</label>
+      <input type="text" id="business-name" placeholder="Ex: Boutique Centre, Taxi..." />
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="font-size:16px;">Colonnes & formules</h2>
+        <span id="col-count-label" style="font-size:13px;color:var(--muted);">0</span>
+      </div>
+      <div id="columns-config"></div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addColumnConfig()">+ Ajouter une colonne</button>
+      <p class="help" style="margin-top:14px;">
+        <strong>Formules :</strong> <code>C1+C2-C4</code> • <code>C6*7%</code> • <code>C6_prev</code> • <code>round100(C6)</code><br>
+        <strong>Saisie multi-lignes :</strong> dans toute colonne « Saisie », appuie sur <em>Entrée</em> pour ajouter plusieurs montants ; le total est calculé automatiquement.
+      </p>
+    </div>
+    <button class="btn btn-primary btn-block" id="btn-save-config" onclick="saveConfig()">Créer & ouvrir</button>
+    <button class="btn btn-secondary btn-block" style="margin-top:8px;" onclick="showHome()">Annuler</button>
+  </div>
+
+  <!-- TABLE -->
+  <div id="app-screen" class="hidden">
+    <div class="app-header">
+      <h1 id="app-title">Activité</h1>
+      <div class="toolbar">
+        <button class="btn-icon" id="btn-undo" title="Annuler" onclick="undo()" disabled>↩️</button>
+        <button class="btn-icon" id="btn-redo" title="Rétablir" onclick="redo()" disabled>↪️</button>
+        <button class="btn-icon" id="btn-save" title="Enregistrer" onclick="manualSave()">💾</button>
+        <button class="btn btn-secondary btn-sm" onclick="addRow()">+ Ligne</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">CSV</button>
+        <button class="btn btn-secondary btn-sm" onclick="showConfigAgain()">Config</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeActivity()">←</button>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table id="data-table"><thead></thead><tbody></tbody></table>
+    </div>
+    <div class="add-row-bar">
+      <button class="btn btn-primary btn-block" onclick="addRow()">+ Ajouter une ligne (aujourd'hui)</button>
+    </div>
+    <p class="status" id="status">Prêt</p>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 id="modal-title">Confirmation</h3>
+      <p id="modal-msg">Êtes-vous sûr ?</p>
+      <div id="modal-extra"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-no">Non</button>
+        <button class="btn btn-danger" id="modal-yes">Oui</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="move-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Déplacer vers…</h3>
+      <p id="move-item-name" style="margin-bottom:12px;"></p>
+      <div id="move-folder-list" style="text-align:left;max-height:240px;overflow-y:auto;margin-bottom:14px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeMoveModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "y_turnover_v5";
+let store = { activities: [], folders: [], trash: [] };
+let currentFolderId = null;   // null = root
+let currentId = null;
+let config = null, rows = [], setupColumns = [];
+let history = [], historyIndex = -1, isDirty = false;
+let pendingConfirm = null;
+let moveTargetId = null;      // item being moved
+let moveTargetType = null;    // "activity" | "folder"
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function formatNumber(n) {
+  if (n === null || n === undefined || isNaN(n)) return "—";
+  return Number(n).toLocaleString("fr-FR");
+}
+function showToast(msg, isError) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " error" : "");
+  setTimeout(() => t.classList.remove("show"), 2400);
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function confirmAction(title, msg, onYes, extraHtml) {
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-msg").textContent = msg;
+  document.getElementById("modal-extra").innerHTML = extraHtml || "";
+  pendingConfirm = { onYes };
+  document.getElementById("modal-overlay").classList.remove("hidden");
+}
+document.getElementById("modal-yes").onclick = () => {
+  document.getElementById("modal-overlay").classList.add("hidden");
+  if (pendingConfirm && pendingConfirm.onYes) pendingConfirm.onYes();
+  pendingConfirm = null;
+};
+document.getElementById("modal-no").onclick = () => {
+  document.getElementById("modal-overlay").classList.add("hidden");
+  pendingConfirm = null;
+};
+
+// STORAGE
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      store.activities = d.activities || [];
+      store.folders = d.folders || [];
+      store.trash = d.trash || [];
+    }
+  } catch(e){}
+}
+function persistStore() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch(e){}
+}
+function saveCurrentActivity() {
+  if (!currentId || !config) return;
+  const idx = store.activities.findIndex(a => a.id === currentId);
+  if (idx >= 0) {
+    store.activities[idx].name = config.businessName;
+    store.activities[idx].columns = config.columns;
+    store.activities[idx].rows = rows;
+    store.activities[idx].updatedAt = new Date().toISOString();
+  }
+  persistStore(); isDirty = false; updateStatus();
+}
+window.addEventListener("beforeunload", () => { if (currentId) saveCurrentActivity(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && currentId) saveCurrentActivity();
+});
+
+// HISTORY
+function pushHistory() {
+  history = history.slice(0, historyIndex + 1);
+  history.push(JSON.stringify({ config, rows }));
+  if (history.length > 40) history.shift(); else historyIndex++;
+  updateUndoRedoButtons(); isDirty = true; updateStatus();
+}
+function undo() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  const snap = JSON.parse(history[historyIndex]);
+  config = snap.config; rows = snap.rows;
+  renderTable(); updateUndoRedoButtons(); isDirty = true; updateStatus();
+  showToast("Annulé");
+}
+function redo() {
+  if (historyIndex >= history.length - 1) return;
+  historyIndex++;
+  const snap = JSON.parse(history[historyIndex]);
+  config = snap.config; rows = snap.rows;
+  renderTable(); updateUndoRedoButtons(); isDirty = true; updateStatus();
+  showToast("Rétabli");
+}
+function updateUndoRedoButtons() {
+  document.getElementById("btn-undo").disabled = historyIndex <= 0;
+  document.getElementById("btn-redo").disabled = historyIndex >= history.length - 1;
+}
+function manualSave() { saveCurrentActivity(); showToast("Enregistré 💾"); }
+function updateStatus() {
+  const el = document.getElementById("status"); if (!el) return;
+  const time = new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  el.textContent = isDirty ? `Modifications non enregistrées • ${time}` : `Enregistré • ${time}`;
+}
+
+// FORMULA
+function evaluateFormula(formula, currentValues, prevValues) {
+  if (!formula || !formula.trim()) return null;
+  let expr = formula.trim()
+    .replace(/round100\s*\(\s*([^)]+)\s*\)/gi, "Math.floor(($1)/100)*100")
+    .replace(/round\s*\(\s*([^)]+)\s*\)/gi, "Math.round($1)")
+    .replace(/(\d+(?:\.\d+)?)\s*%/g, "($1/100)")
+    .replace(/C(\d+)_prev/gi, (_, n) => {
+      const idx = parseInt(n,10)-1;
+      const v = prevValues && prevValues[idx];
+      return (v !== undefined && v !== null && !isNaN(v)) ? v : 0;
+    })
+    .replace(/C(\d+)/gi, (_, n) => {
+      const idx = parseInt(n,10)-1;
+      const v = currentValues[idx];
+      return (v !== undefined && v !== null && !isNaN(v)) ? v : 0;
+    });
+  const safe = expr.replace(/Math\.(floor|round)/g, "");
+  if (!/^[\d\s+\-*/().]+$/.test(safe)) return null;
+  try {
+    const result = Function('"use strict"; return (' + expr + ')')();
+    return (typeof result === "number" && isFinite(result)) ? result : null;
+  } catch(e) { return null; }
+}
+function usesPrev(formula) { return /C\d+_prev/i.test(formula||""); }
+function recalculateRow(rowIndex) {
+  const row = rows[rowIndex]; if (!row) return;
+  const prevValues = rowIndex > 0 ? rows[rowIndex-1].values : null;
+  for (let pass = 0; pass < 6; pass++) {
+    let changed = false;
+    config.columns.forEach((col, colIdx) => {
+      if (col.type === "calculated" && col.formula) {
+        if (rowIndex === 0 && usesPrev(col.formula) && row.values[colIdx] !== null && row.values[colIdx] !== undefined) return;
+        const newVal = evaluateFormula(col.formula, row.values, prevValues);
+        if (newVal !== null && row.values[colIdx] !== newVal) {
+          row.values[colIdx] = newVal; changed = true;
+        }
+      }
+    });
+    if (!changed) break;
+  }
+}
+function recalculateAll() { for (let i=0; i<rows.length; i++) recalculateRow(i); }
+
+// SCREENS
+function showScreen(id) {
+  ["home-screen","trash-screen","config-screen","app-screen"].forEach(s => {
+    document.getElementById(s).classList.toggle("hidden", s !== id);
+  });
+}
+function showHome() {
+  if (currentId) { saveCurrentActivity(); currentId = null; }
+  renderHome(); showScreen("home-screen");
+}
+function showTrash() { renderTrashList(); showScreen("trash-screen"); }
+
+// FOLDERS & HOME
+function getFolderPath(folderId) {
+  const path = [];
+  let id = folderId;
+  while (id) {
+    const f = store.folders.find(x => x.id === id);
+    if (!f) break;
+    path.unshift(f);
+    id = f.parentId;
+  }
+  return path;
+}
+
+function renderBreadcrumb() {
+  const el = document.getElementById("breadcrumb");
+  if (!currentFolderId) {
+    el.innerHTML = `<span onclick="navigateToFolder(null)">Accueil</span>`;
+    return;
+  }
+  const path = getFolderPath(currentFolderId);
+  let html = `<span onclick="navigateToFolder(null)">Accueil</span>`;
+  path.forEach(f => {
+    html += `<span class="sep">›</span><span onclick="navigateToFolder('${f.id}')">${escapeHtml(f.name)}</span>`;
+  });
+  el.innerHTML = html;
+}
+
+function navigateToFolder(id) {
+  currentFolderId = id;
+  renderHome();
+}
+
+function renderHome() {
+  renderBreadcrumb();
+  const list = document.getElementById("item-list");
+  const folders = store.folders.filter(f => f.parentId === currentFolderId);
+  const activities = store.activities.filter(a => (a.folderId || null) === currentFolderId);
+
+  if (folders.length === 0 && activities.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📁</div><p>Ce dossier est vide.<br>Crée une activité ou un sous-dossier.</p></div>`;
+    return;
+  }
+
+  let html = "";
+  // Folders first
+  folders.forEach(f => {
+    const childCount = store.folders.filter(x => x.parentId === f.id).length
+      + store.activities.filter(a => a.folderId === f.id).length;
+    html += `<div class="item folder" onclick="navigateToFolder('${f.id}')">
+      <div class="icon">📁</div>
+      <div class="info">
+        <div class="name">${escapeHtml(f.name)}</div>
+        <div class="meta">${childCount} élément${childCount>1?"s":""}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-icon" title="Déplacer" onclick="event.stopPropagation();openMoveModal('${f.id}','folder')">↔️</button>
+        <button class="btn-icon danger" title="Supprimer" onclick="event.stopPropagation();deleteFolder('${f.id}')">🗑</button>
+      </div>
+    </div>`;
+  });
+  // Activities
+  activities.forEach(a => {
+    const rc = (a.rows||[]).length;
+    const updated = a.updatedAt ? new Date(a.updatedAt).toLocaleDateString("fr-FR") : "—";
+    html += `<div class="item" onclick="openActivity('${a.id}')">
+      <div class="icon">📊</div>
+      <div class="info">
+        <div class="name">${escapeHtml(a.name)}</div>
+        <div class="meta">${rc} ligne${rc>1?"s":""} • MAJ ${updated}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-icon" title="Déplacer" onclick="event.stopPropagation();openMoveModal('${a.id}','activity')">↔️</button>
+        <button class="btn-icon danger" title="Supprimer" onclick="event.stopPropagation();deleteActivity('${a.id}')">🗑</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function createFolder() {
+  confirmAction("Nouveau dossier", "Donne un nom au dossier :", () => {
+    const input = document.getElementById("new-folder-name");
+    const name = (input ? input.value.trim() : "") || "Nouveau dossier";
+    store.folders.push({
+      id: uid(),
+      name,
+      parentId: currentFolderId,
+      createdAt: new Date().toISOString()
+    });
+    persistStore();
+    renderHome();
+    showToast("Dossier créé");
+  }, `<input type="text" id="new-folder-name" placeholder="Nom du dossier" autofocus />`);
+  // Focus after modal opens
+  setTimeout(() => {
+    const inp = document.getElementById("new-folder-name");
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function deleteFolder(id) {
+  const hasChildren = store.folders.some(f => f.parentId === id)
+    || store.activities.some(a => a.folderId === id);
+  const msg = hasChildren
+    ? "Ce dossier contient des éléments. Ils seront aussi déplacés dans la corbeille."
+    : "Le dossier sera déplacé dans la corbeille.";
+  confirmAction("Supprimer le dossier ?", msg, () => {
+    // Collect all nested folders and activities
+    const toTrashFolders = [];
+    const toTrashActs = [];
+    function collect(fid) {
+      store.folders.filter(f => f.parentId === fid).forEach(f => {
+        toTrashFolders.push(f);
+        collect(f.id);
+      });
+      store.activities.filter(a => a.folderId === fid).forEach(a => toTrashActs.push(a));
+    }
+    collect(id);
+    const folder = store.folders.find(f => f.id === id);
+    if (folder) {
+      folder.deletedAt = new Date().toISOString();
+      store.trash.unshift({ type: "folder", ...folder });
+    }
+    toTrashFolders.forEach(f => {
+      f.deletedAt = new Date().toISOString();
+      store.trash.unshift({ type: "folder", ...f });
+    });
+    toTrashActs.forEach(a => {
+      a.deletedAt = new Date().toISOString();
+      store.trash.unshift({ type: "activity", ...a });
+    });
+    // Remove from main
+    const allFolderIds = [id, ...toTrashFolders.map(f => f.id)];
+    store.folders = store.folders.filter(f => !allFolderIds.includes(f.id));
+    store.activities = store.activities.filter(a => !toTrashActs.find(t => t.id === a.id));
+    persistStore();
+    renderHome();
+    showToast("Déplacé dans la corbeille");
+  });
+}
+
+function deleteActivity(id) {
+  confirmAction("Supprimer l'activité ?", "Elle ira dans la corbeille. Tu pourras la restaurer.", () => {
+    const idx = store.activities.findIndex(a => a.id === id);
+    if (idx < 0) return;
+    const [act] = store.activities.splice(idx, 1);
+    act.deletedAt = new Date().toISOString();
+    store.trash.unshift({ type: "activity", ...act });
+    persistStore(); renderHome();
+    showToast("Déplacée dans la corbeille");
+  });
+}
+
+// MOVE
+function openMoveModal(id, type) {
+  moveTargetId = id;
+  moveTargetType = type;
+  const name = type === "folder"
+    ? (store.folders.find(f => f.id === id) || {}).name
+    : (store.activities.find(a => a.id === id) || {}).name;
+  document.getElementById("move-item-name").textContent = name || "";
+  const list = document.getElementById("move-folder-list");
+  // Build folder tree options (exclude self and descendants if moving folder)
+  const exclude = new Set();
+  if (type === "folder") {
+    exclude.add(id);
+    function collectDesc(fid) {
+      store.folders.filter(f => f.parentId === fid).forEach(f => {
+        exclude.add(f.id);
+        collectDesc(f.id);
+      });
+    }
+    collectDesc(id);
+  }
+  let html = `<div class="item" style="margin-bottom:6px;padding:10px;" onclick="doMove(null)">
+    <div class="icon">🏠</div><div class="info"><div class="name">Accueil (racine)</div></div></div>`;
+  function renderOpts(parentId, depth) {
+    store.folders.filter(f => f.parentId === parentId && !exclude.has(f.id)).forEach(f => {
+      html += `<div class="item folder" style="margin-bottom:6px;padding:10px;padding-left:${12+depth*16}px;" onclick="doMove('${f.id}')">
+        <div class="icon">📁</div><div class="info"><div class="name">${escapeHtml(f.name)}</div></div></div>`;
+      renderOpts(f.id, depth + 1);
+    });
+  }
+  renderOpts(null, 0);
+  list.innerHTML = html;
+  document.getElementById("move-overlay").classList.remove("hidden");
+}
+function closeMoveModal() {
+  document.getElementById("move-overlay").classList.add("hidden");
+  moveTargetId = null; moveTargetType = null;
+}
+function doMove(targetFolderId) {
+  if (moveTargetType === "activity") {
+    const act = store.activities.find(a => a.id === moveTargetId);
+    if (act) act.folderId = targetFolderId;
+  } else if (moveTargetType === "folder") {
+    const f = store.folders.find(x => x.id === moveTargetId);
+    if (f) f.parentId = targetFolderId;
+  }
+  persistStore();
+  closeMoveModal();
+  renderHome();
+  showToast("Déplacé");
+}
+
+// TRASH
+function renderTrashList() {
+  const list = document.getElementById("trash-list");
+  if (store.trash.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🗑</div><p>La corbeille est vide.</p></div>`;
+    return;
+  }
+  list.innerHTML = store.trash.map((item, i) => {
+    const del = item.deletedAt ? new Date(item.deletedAt).toLocaleDateString("fr-FR") : "—";
+    const icon = item.type === "folder" ? "📁" : "📊";
+    const typeLabel = item.type === "folder" ? "Dossier" : "Activité";
+    return `<div class="trash-item">
+      <div class="info">
+        <div class="name">${icon} ${escapeHtml(item.name)}</div>
+        <div class="meta">${typeLabel} • Supprimé le ${del}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="restoreTrashItem(${i})">Restaurer</button>
+      <button class="btn btn-danger btn-sm" onclick="permanentDeleteTrash(${i})">Effacer</button>
+    </div>`;
+  }).join("");
+}
+function restoreTrashItem(index) {
+  const item = store.trash[index];
+  if (!item) return;
+  store.trash.splice(index, 1);
+  delete item.deletedAt;
+  if (item.type === "folder") {
+    item.parentId = null; // restore to root
+    store.folders.push(item);
+  } else {
+    item.folderId = null;
+    store.activities.unshift(item);
+  }
+  persistStore();
+  renderTrashList();
+  showToast("Restauré");
+}
+function permanentDeleteTrash(index) {
+  confirmAction("Suppression définitive ?", "Action irréversible.", () => {
+    store.trash.splice(index, 1);
+    persistStore();
+    renderTrashList();
+    showToast("Supprimé définitivement");
+  });
+}
+
+// ACTIVITIES
+function startNewActivity() {
+  currentId = null; config = null; rows = [];
+  setupColumns = DEFAULTS.map(c => ({...c}));
+  document.getElementById("business-name").value = "";
+  document.getElementById("btn-save-config").textContent = "Créer & ouvrir";
+  renderColumnConfig(); showScreen("config-screen");
+}
+function openActivity(id) {
+  const act = store.activities.find(a => a.id === id); if (!act) return;
+  currentId = id;
+  config = { businessName: act.name, columns: act.columns.map(c => ({...c})) };
+  rows = (act.rows||[]).map(r => ({ date: r.date, values: [...r.values], raw: r.raw ? {...r.raw} : {} }));
+  history = []; historyIndex = -1; pushHistory(); isDirty = false;
+  document.getElementById("app-title").textContent = config.businessName;
+  showScreen("app-screen"); renderTable(); updateStatus();
+}
+function closeActivity() { saveCurrentActivity(); currentId = null; showHome(); }
+
+// CONFIG
+const DEFAULTS = [
+  { name: "Ventes cash", type: "input", formula: "" },
+  { name: "Ventes crédit", type: "input", formula: "" },
+  { name: "Autres recettes", type: "input", formula: "" },
+  { name: "Dépenses", type: "input", formula: "" },
+  { name: "CA total", type: "calculated", formula: "C1 + C2 + C3" },
+  { name: "Bénéfice", type: "calculated", formula: "C5 - C4" },
+  { name: "Bénéfice arrondi", type: "calculated", formula: "round100(C6)" }
+];
+function renderColumnConfig() {
+  const container = document.getElementById("columns-config");
+  container.innerHTML = "";
+  document.getElementById("col-count-label").textContent = setupColumns.length + " colonne" + (setupColumns.length>1?"s":"");
+  setupColumns.forEach((col, i) => {
+    const div = document.createElement("div");
+    div.className = "col-config" + (col.type==="calculated"?" calculated":"");
+    div.innerHTML = `
+      <button class="btn-icon danger del-col" onclick="removeColumnConfig(${i})">🗑</button>
+      <div class="row">
+        <div><label>Nom C${i+1}</label><input type="text" class="col-name" value="${escapeHtml(col.name)}" /></div>
+        <div><label>Type</label>
+          <select class="col-type">
+            <option value="input" ${col.type==="input"?"selected":""}>Saisie</option>
+            <option value="calculated" ${col.type==="calculated"?"selected":""}>Calculée</option>
+          </select>
+        </div>
+      </div>
+      <div class="formula-row"><label>Formule</label>
+        <input type="text" class="col-formula" value="${escapeHtml(col.formula||"")}" placeholder="Ex: C1+C2 ou C6*7%" />
+      </div>`;
+    container.appendChild(div);
+    div.querySelector(".col-name").oninput = e => { setupColumns[i].name = e.target.value; };
+    div.querySelector(".col-type").onchange = e => {
+      setupColumns[i].type = e.target.value;
+      div.classList.toggle("calculated", e.target.value === "calculated");
+    };
+    const f = div.querySelector(".col-formula");
+    if (f) f.oninput = e => { setupColumns[i].formula = e.target.value; };
+  });
+}
+function addColumnConfig() {
+  if (setupColumns.length >= 15) { showToast("Maximum 15 colonnes", true); return; }
+  setupColumns.push({ name: "Nouvelle colonne", type: "input", formula: "" });
+  renderColumnConfig();
+}
+function removeColumnConfig(index) {
+  if (setupColumns.length <= 1) { showToast("Il faut au moins 1 colonne", true); return; }
+  confirmAction("Supprimer cette colonne ?", "La colonne et ses données seront perdues.", () => {
+    setupColumns.splice(index, 1); renderColumnConfig();
+  });
+}
+function saveConfig() {
+  const nameInputs = document.querySelectorAll(".col-name");
+  const typeSelects = document.querySelectorAll(".col-type");
+  const formulaInputs = document.querySelectorAll(".col-formula");
+  for (let i=0; i<setupColumns.length; i++) {
+    setupColumns[i].name = nameInputs[i]?.value.trim() || ("Colonne "+(i+1));
+    setupColumns[i].type = typeSelects[i]?.value || "input";
+    setupColumns[i].formula = formulaInputs[i]?.value.trim() || "";
+  }
+  const name = document.getElementById("business-name").value.trim() || "Mon activité";
+  const newColumns = setupColumns.map(c => ({...c}));
+
+  if (currentId) {
+    const oldN = config.columns.length, newN = newColumns.length;
+    rows.forEach(row => {
+      if (newN > oldN) for (let i=oldN; i<newN; i++) row.values.push(null);
+      else if (newN < oldN) row.values = row.values.slice(0, newN);
+    });
+    config = { businessName: name, columns: newColumns };
+    recalculateAll(); pushHistory(); saveCurrentActivity();
+    document.getElementById("app-title").textContent = name;
+    showScreen("app-screen"); renderTable(); showToast("Configuration mise à jour");
+  } else {
+    const id = uid();
+    config = { businessName: name, columns: newColumns };
+    rows = []; addRow(false);
+    store.activities.unshift({
+      id, name, columns: newColumns, rows: JSON.parse(JSON.stringify(rows)),
+      folderId: currentFolderId,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+    persistStore(); currentId = id;
+    history = []; historyIndex = -1; pushHistory(); isDirty = false;
+    document.getElementById("app-title").textContent = name;
+    showScreen("app-screen"); renderTable(); showToast("Activité créée");
+  }
+}
+function showConfigAgain() {
+  setupColumns = config.columns.map(c => ({...c}));
+  document.getElementById("business-name").value = config.businessName;
+  document.getElementById("btn-save-config").textContent = "Enregistrer la configuration";
+  renderColumnConfig(); showScreen("config-screen");
+}
+
+// TABLE
+function renderTable() {
+  const thead = document.querySelector("#data-table thead");
+  const tbody = document.querySelector("#data-table tbody");
+  let headerHtml = "<tr><th>Date</th>";
+  config.columns.forEach((col, idx) => {
+    const tip = col.type==="calculated" ? "Formule: "+col.formula : "Saisie";
+    headerHtml += `<th title="${tip}">${escapeHtml(col.name)}<br><span class="badge">C${idx+1}</span></th>`;
+  });
+  headerHtml += "<th style='width:36px'></th></tr>";
+  thead.innerHTML = headerHtml;
+
+  const active = document.activeElement;
+  const activeInfo = (active && active.dataset) ? { row: active.dataset.row, col: active.dataset.col } : null;
+
+  tbody.innerHTML = "";
+  rows.forEach((row, rowIdx) => {
+    const tr = document.createElement("tr");
+    const tdDate = document.createElement("td");
+    const dateInput = document.createElement("input");
+    dateInput.type = "date"; dateInput.value = row.date;
+    dateInput.dataset.row = rowIdx;
+    dateInput.onchange = () => { pushHistory(); row.date = dateInput.value; saveCurrentActivity(); };
+    tdDate.appendChild(dateInput); tr.appendChild(tdDate);
+
+    config.columns.forEach((col, colIdx) => {
+      const td = document.createElement("td");
+      const isCalc = col.type === "calculated";
+      const isFirstRowPrev = rowIdx === 0 && isCalc && usesPrev(col.formula);
+
+      if (isCalc && !isFirstRowPrev) {
+        td.className = "calculated";
+        td.textContent = formatNumber(row.values[colIdx]);
+        td.title = "Appuie pour copier";
+        td.onclick = () => {
+          const text = row.values[colIdx] != null ? String(row.values[colIdx]) : "";
+          if (text && navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => showToast("Copié : "+text)).catch(()=>{});
+          }
+        };
+      } else {
+        if (isFirstRowPrev) td.className = "calculated editable-first";
+        // Multi-line support: each line is a number, cell value = sum of lines
+        // Example:
+        // 1525
+        // 1626
+        // 1727  → total = 4878
+        if (!row.raw) row.raw = {};
+        const wrap = document.createElement("div");
+        wrap.className = "multi-wrap";
+        const ta = document.createElement("textarea");
+        ta.rows = 1;
+        // Pas de inputMode decimal : sinon le clavier mobile n'a pas Entrée pour les sous-lignes
+        ta.autocomplete = "off";
+        ta.enterKeyHint = "enter";
+        ta.dataset.row = rowIdx;
+        ta.dataset.col = colIdx;
+        ta.placeholder = "ex: 1500\nou plusieurs lignes";
+        ta.title = "Entrée = nouvelle sous-ligne (total automatique)";
+        // Prefer stored raw text; fallback to single value
+        if (row.raw[colIdx] !== undefined && row.raw[colIdx] !== null) {
+          ta.value = row.raw[colIdx];
+        } else {
+          const val = row.values[colIdx];
+          ta.value = (val !== null && val !== undefined && !isNaN(val)) ? String(val) : "";
+        }
+        const sumLabel = document.createElement("div");
+        sumLabel.className = "multi-sum";
+
+        function parseSum(text) {
+          const lines = text.split(/[\n;]+/).map(l => l.trim().replace(",",".")).filter(l => l !== "");
+          if (lines.length === 0) return { sum: null, count: 0 };
+          let sum = 0;
+          for (const l of lines) {
+            const n = parseFloat(l);
+            if (!isNaN(n)) sum += n;
+          }
+          return { sum, count: lines.length };
+        }
+        function updateSumLabel() {
+          const { sum, count } = parseSum(ta.value);
+          if (count > 1 && sum !== null) {
+            sumLabel.textContent = "Σ " + Number(sum).toLocaleString("fr-FR");
+            sumLabel.style.display = "block";
+          } else {
+            sumLabel.textContent = "";
+            sumLabel.style.display = "none";
+          }
+        }
+        const autoSize = () => {
+          ta.style.height = "auto";
+          ta.style.height = Math.min(ta.scrollHeight, 110) + "px";
+          updateSumLabel();
+        };
+        setTimeout(autoSize, 0);
+
+        ta.oninput = () => {
+          row.raw[colIdx] = ta.value;
+          const { sum } = parseSum(ta.value);
+          row.values[colIdx] = sum;
+          autoSize();
+          softRecalculate(rowIdx);
+          isDirty = true; updateStatus();
+        };
+        ta.onchange = () => { pushHistory(); saveCurrentActivity(); };
+        ta.addEventListener("paste", e => {
+          setTimeout(() => {
+            row.raw[colIdx] = ta.value;
+            const { sum } = parseSum(ta.value);
+            row.values[colIdx] = sum;
+            autoSize();
+            softRecalculate(rowIdx);
+            pushHistory(); saveCurrentActivity();
+          }, 0);
+        });
+        wrap.appendChild(ta);
+        wrap.appendChild(sumLabel);
+        td.appendChild(wrap);
+      }
+      tr.appendChild(td);
+    });
+
+    const tdAct = document.createElement("td");
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-icon danger"; delBtn.innerHTML = "🗑";
+    delBtn.onclick = () => deleteRow(rowIdx);
+    tdAct.appendChild(delBtn); tr.appendChild(tdAct);
+    tbody.appendChild(tr);
+  });
+
+  if (activeInfo) {
+    const el = tbody.querySelector(`textarea[data-row="${activeInfo.row}"][data-col="${activeInfo.col}"], input[data-row="${activeInfo.row}"][data-col="${activeInfo.col}"]`);
+    if (el) {
+      el.focus();
+      const len = el.value.length;
+      if (el.setSelectionRange) el.setSelectionRange(len, len);
+    }
+  }
+}
+
+function softRecalculate(fromRow) {
+  for (let i = fromRow; i < rows.length; i++) recalculateRow(i);
+  const tbody = document.querySelector("#data-table tbody");
+  if (!tbody) return;
+  rows.forEach((row, rowIdx) => {
+    if (rowIdx < fromRow) return;
+    const tr = tbody.children[rowIdx]; if (!tr) return;
+    config.columns.forEach((col, colIdx) => {
+      if (col.type !== "calculated") return;
+      if (rowIdx === 0 && usesPrev(col.formula)) return;
+      const td = tr.children[colIdx + 1];
+      if (td && td.classList.contains("calculated")) {
+        td.textContent = formatNumber(row.values[colIdx]);
+      }
+    });
+  });
+}
+
+function addRow(doHistory = true) {
+  const values = config.columns.map(() => null);
+  rows.push({ date: todayStr(), values, raw: {} });
+  recalculateRow(rows.length - 1);
+  if (doHistory) pushHistory();
+  renderTable(); saveCurrentActivity();
+  showToast("Ligne ajoutée");
+  const w = document.querySelector(".table-wrapper");
+  if (w) w.scrollTop = w.scrollHeight;
+}
+function deleteRow(idx) {
+  confirmAction("Supprimer cette ligne ?", "La ligne sera définitivement supprimée.", () => {
+    rows.splice(idx, 1); recalculateAll(); pushHistory();
+    renderTable(); saveCurrentActivity(); showToast("Ligne supprimée");
+  });
+}
+function exportCSV() {
+  let csv = "Date;" + config.columns.map(c => c.name).join(";") + "\n";
+  rows.forEach(row => { csv += [row.date, ...row.values.map(v => v==null?"":v)].join(";") + "\n"; });
+  const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (config.businessName||"export").replace(/\s+/g,"_") + "_" + todayStr() + ".csv";
+  a.click(); URL.revokeObjectURL(url);
+  showToast("CSV exporté");
+}
+
+// INIT
+loadStore();
+showHome();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body>
+</html>

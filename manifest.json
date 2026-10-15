@@ -1,0 +1,23 @@
+{
+  "background_color": "#0f172a",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "YTurnoverManagement",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "YTurnoverManagement",
+  "start_url": "/",
+  "theme_color": "#0f172a",
+  "id": "com.yturnover.management",
+  "description": "Suivi quotidien du chiffre d'affaires et des bénéfices - multi-activités",
+  "lang": "fr",
+  "display_override": [
+    "minimal-ui",
+    "standalone",
+    "window-controls-overlay",
+    "fullscreen"
+  ],
+  "categories": [
+    "business"
+  ]
+}
